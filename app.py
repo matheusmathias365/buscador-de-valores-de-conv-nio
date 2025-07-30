@@ -23,10 +23,22 @@ def carregar_dados():
         return None
 
 
-def buscar_procedimento(df, nome_procedimento):
-    """ Busca por um procedimento no DataFrame de convênios. """
-    if df is not None and nome_procedimento:
-        resultados = df[df['Descrição'].str.contains(nome_procedimento, case=False, na=False)]
+def buscar_procedimento(df, termo_busca):
+    """ Busca por um procedimento no DataFrame de convênios, incluindo 'Código TUSS'. """
+    if df is not None and termo_busca:
+        # Garante que a coluna 'Código TUSS' existe e é string para a busca
+        if 'Código TUSS' in df.columns:
+            df['Código TUSS'] = df['Código TUSS'].astype(str)
+            
+            resultados = df[
+                df['Descrição'].str.contains(termo_busca, case=False, na=False) |
+                df['Código TUSS'].str.contains(termo_busca, case=False, na=False)
+            ]
+        else:
+            # Se 'Código TUSS' não existir, busca apenas em 'Descrição'
+            resultados = df[df['Descrição'].str.contains(termo_busca, case=False, na=False)]
+            st.warning("Coluna 'Código TUSS' não encontrada na planilha. A busca está sendo realizada apenas pela 'Descrição'.")
+            
         return resultados.sort_values(by='Valor', ascending=False)
     return pd.DataFrame() # Retorna um DataFrame vazio se não houver busca
 
