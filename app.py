@@ -13,11 +13,10 @@ st.set_page_config(
 def carregar_dados():
     """ Carrega os dados da tabela unificada de convênios. """
     try:
-        # Garante que o ficheiro CSV está a ser lido corretamente
-        df = pd.read_csv('tabela_unificada_convenios.csv', sep=';', decimal=',')
+        df = pd.read_excel('planilha_unificada_por_convenio.xlsx')
         return df
     except FileNotFoundError:
-        st.error("Ficheiro 'tabela_unificada_convenios.csv' não encontrado. Certifique-se de que o ficheiro está na mesma pasta que a aplicação.")
+        st.error("Ficheiro 'planilha_unificada_por_convenio.xlsx' não encontrado. Certifique-se de que o ficheiro está na mesma pasta que a aplicação.")
         return None
     except Exception as e:
         st.error(f"Ocorreu um erro ao carregar os dados: {e}")
@@ -27,9 +26,8 @@ def carregar_dados():
 def buscar_procedimento(df, nome_procedimento):
     """ Busca por um procedimento no DataFrame de convênios. """
     if df is not None and nome_procedimento:
-        # Busca por correspondências parciais, ignorando maiúsculas/minúsculas
-        resultados = df[df['Descricao'].str.contains(nome_procedimento, case=False, na=False)]
-        return resultados.sort_values(by='Valor_HM', ascending=False)
+        resultados = df[df['Descrição'].str.contains(nome_procedimento, case=False, na=False)]
+        return resultados.sort_values(by='Valor', ascending=False)
     return pd.DataFrame() # Retorna um DataFrame vazio se não houver busca
 
 # --- Interface da Aplicação ---
@@ -54,17 +52,16 @@ if df_convenios is not None:
         if not resultados.empty:
             # Formatação dos resultados para exibição
             resultados_formatados = resultados.copy()
-            # Formata a coluna de valor como moeda (Real Brasileiro)
-            resultados_formatados['Valor_HM'] = resultados_formatados['Valor_HM'].apply(lambda x: f"R$ {x:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+            resultados_formatados['Valor'] = resultados_formatados['Valor'].apply(lambda x: f"R$ {x:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
 
             # Exibe os resultados numa tabela interativa
             st.dataframe(resultados_formatados.reset_index(drop=True), use_container_width=True)
 
             # Opcional: Gráfico com os 10 maiores valores
             st.subheader("Top 10 Maiores Valores")
-            top_10 = resultados.head(10).sort_values(by='Valor_HM', ascending=True)
+            top_10 = resultados.head(10).sort_values(by='Valor', ascending=True)
             if not top_10.empty:
-                st.bar_chart(top_10.set_index('Convenio')['Valor_HM'])
+                st.bar_chart(top_10.set_index('Convênio')['Valor'])
         else:
             st.warning("Nenhum resultado encontrado para o termo buscado.")
 
